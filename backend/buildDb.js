@@ -124,16 +124,16 @@ client.connect()
     //         VALUES ('angler');`
     // client.query(seedLu_userType)
 
-    const seedUsers = 
-    `   INSERT INTO users(name, userType)
-        VALUES ('Admin', 1);
-        INSERT INTO users(name, userType)
-        VALUES ('Litera Cola', 2);
-        INSERT INTO users(name, userType)
-        VALUES ('Jesse', 3);
-        INSERT INTO users(name, userType)
-        VALUES ('John', 4);`
-    client.query(seedUsers)
+    // const seedUsers = 
+    // `   INSERT INTO users(name, userType)
+    //     VALUES ('Admin', 1);
+    //     INSERT INTO users(name, userType)
+    //     VALUES ('Litera Cola', 2);
+    //     INSERT INTO users(name, userType)
+    //     VALUES ('Jesse', 3);
+    //     INSERT INTO users(name, userType)
+    //     VALUES ('John', 4);`
+    // client.query(seedUsers)
     .then((res) => 
     console.log(res))
     .catch((err) => console.log(err))
