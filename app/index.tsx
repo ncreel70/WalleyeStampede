@@ -3,41 +3,14 @@ import { SafeAreaView, StyleSheet } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import HomeNavButton from "../components/home/HomeNavButton";
 import * as SQLite from 'expo-sqlite';
-import {checkIfExists, seedData, getTournaments, getLeagues} from './utils/api'
+import {checkIfExists, seedData, getTournaments, getLeagues, openDatabase} from './utils/api'
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { useRouter } from "expo-router";
 
 const Home = () => {
-  useEffect(() => {
-    async function openDatabase(pathToDatabaseFile: string): Promise<SQLite.WebSQLDatabase> {
-      const dbPath = `${FileSystem.documentDirectory}SQLite/stampede.db`;
-
-      if (!(await FileSystem.getInfoAsync(dbPath)).exists) {
-        if (!(await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite`)).exists) {
-          await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}SQLite`);
-        }
-        await FileSystem.copyAsync({
-          from: pathToDatabaseFile,
-          to: dbPath,
-        });
-      }
-
-      return SQLite.openDatabase('stampede.db');
-    }
-
-    openDatabase(require('./assets/SQLite/stampede.db'))
-      .then((db) => {
-        
-        checkIfExists(db);
-        seedData(db);
-        getTournaments(db);
-        getLeagues(db);
-        console.log("Database opened:", db);
-      })
-      
+  const [db, setDb] = React.useState<SQLite.WebSQLDatabase | null>(null);
  
-}, []);
 
   const router = useRouter();
     

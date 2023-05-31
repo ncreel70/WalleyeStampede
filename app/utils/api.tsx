@@ -1,57 +1,81 @@
+import * as SQLite from 'expo-sqlite';
+import * as FileSystem from 'expo-file-system';
+import { Asset } from 'expo-asset';
+import { TournamentData } from './types';
+
+
+export async function openDatabase(pathToDatabaseFile: string): Promise<SQLite.WebSQLDatabase> {
+    const dbPath = `${FileSystem.documentDirectory}SQLite/stampede.db`;
+
+    if (!(await FileSystem.getInfoAsync(dbPath)).exists) {
+      if (!(await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite`)).exists) {
+        await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}SQLite`);
+      }
+      await FileSystem.copyAsync({
+        from: pathToDatabaseFile,
+        to: dbPath,
+      });
+    }
+
+    return SQLite.openDatabase('stampede.db');
+  }
+
+
 export async function checkIfExists(db: SQLite.WebSQLDatabase): Promise<void> {
-    const query = `
-      CREATE TABLE IF NOT EXISTS tournament (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL
-      );
+    const query = 
+    //   CREATE TABLE IF NOT EXISTS tournament (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     name TEXT NOT NULL,
+    //     start_date TEXT NOT NULL,
+    //     end_date TEXT NOT NULL
+    //   );
+    `
       CREATE TABLE IF NOT EXISTS lu_league (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL
-      );
-      CREATE TABLE IF NOT EXISTS team (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        tournamentId INTEGER NOT NULL,
-        leagueId INTEGER NOT NULL,
-        FOREIGN KEY (tournamentId) REFERENCES tournament (id),
-        FOREIGN KEY (leagueId) REFERENCES league (id)
-      );
-      CREATE TABLE IF NOT EXISTS lu_userType (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-      );
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        userType INTEGER,
-        FOREIGN KEY (userType) REFERENCES lu_userType (id)
-      );
-      CREATE TABLE IF NOT EXISTS userTeam (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER NOT NULL,
-        teamId INTEGER NOT NULL,
-        FOREIGN KEY (userId) REFERENCES users (id),
-        FOREIGN KEY (teamId) REFERENCES team (id)
-      );
-      CREATE TABLE IF NOT EXISTS teamTournament (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        teamId INTEGER NOT NULL,
-        teamNumber INTEGER NOT NULL,
-        tournamentId INTEGER NOT NULL,
-        FOREIGN KEY (teamId) REFERENCES team (id),
-        FOREIGN KEY (tournamentId) REFERENCES tournament (id)
-      );
-      CREATE TABLE IF NOT EXISTS fish (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        length DOUBLE NOT NULL,
-        teamId INTEGER NOT NULL,
-        tournamentId INTEGER NOT NULL,
-        FOREIGN KEY (teamId) REFERENCES team (id),
-        FOREIGN KEY (tournamentId) REFERENCES tournament (id)
-      );
-    `;
+      );`
+    //   CREATE TABLE IF NOT EXISTS team (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     name TEXT NOT NULL,
+    //     tournamentId INTEGER NOT NULL,
+    //     leagueId INTEGER NOT NULL,
+    //     FOREIGN KEY (tournamentId) REFERENCES tournament (id),
+    //     FOREIGN KEY (leagueId) REFERENCES league (id)
+    //   );
+    //   CREATE TABLE IF NOT EXISTS lu_userType (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     name TEXT NOT NULL
+    //   );
+    //   CREATE TABLE IF NOT EXISTS users (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     name TEXT NOT NULL,
+    //     userType INTEGER,
+    //     FOREIGN KEY (userType) REFERENCES lu_userType (id)
+    //   );
+    //   CREATE TABLE IF NOT EXISTS userTeam (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     userId INTEGER NOT NULL,
+    //     teamId INTEGER NOT NULL,
+    //     FOREIGN KEY (userId) REFERENCES users (id),
+    //     FOREIGN KEY (teamId) REFERENCES team (id)
+    //   );
+    //   CREATE TABLE IF NOT EXISTS teamTournament (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     teamId INTEGER NOT NULL,
+    //     teamNumber INTEGER NOT NULL,
+    //     tournamentId INTEGER NOT NULL,
+    //     FOREIGN KEY (teamId) REFERENCES team (id),
+    //     FOREIGN KEY (tournamentId) REFERENCES tournament (id)
+    //   );
+    //   CREATE TABLE IF NOT EXISTS fish (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     length DOUBLE NOT NULL,
+    //     teamId INTEGER NOT NULL,
+    //     tournamentId INTEGER NOT NULL,
+    //     FOREIGN KEY (teamId) REFERENCES team (id),
+    //     FOREIGN KEY (tournamentId) REFERENCES tournament (id)
+    //   );
+    ;
   
     return new Promise<void>((resolve, reject) => {
       db.transaction((transaction) => {
@@ -151,40 +175,76 @@ export async function checkIfExists(db: SQLite.WebSQLDatabase): Promise<void> {
     });
   }
   
-
-export async function getTournaments(db) {
+  
+  export async function getTournaments(db: SQLite.WebSQLDatabase): Promise<TournamentData[]> {
     const query = "SELECT * FROM tournament;";
-    db.transaction((transaction) => {
-      transaction.executeSql(
-        query,
-        [],
-        (_, { rows }) => {
-          console.log("Query completed");
-          console.log(rows);
-        },
-        (_, error) => {
-          console.error("Query error:", error);
-        }
-      );
+  
+    return new Promise<TournamentData[]>((resolve, reject) => {
+      db.transaction((transaction) => {
+        transaction.executeSql(
+          query,
+          [],
+          (_, { rows }) => {
+            console.log("Query completed");
+            const tournaments: TournamentData[] = [];
+            for (let i = 0; i < rows.length; i++) {
+              const { id, name, start_date, end_date } = rows.item(i);
+              tournaments.push({ id, name, start_date, end_date });
+            }
+            resolve(tournaments);
+          }
+        );
+      });
     });
   }
 
-    export async function getLeagues(db) {
-    const query = "SELECT * FROM lu_league;";
-    db.transaction((transaction) => {
+  
+
+  
+  export async function addNewTournament(db: SQLite.WebSQLDatabase, tournament: TournamentData): Promise<void> {
+    const query = `
+      INSERT INTO tournament (name, start_date, end_date)
+      VALUES (?, ?, ?);
+    `;
+  
+    return new Promise<void>((resolve, reject) => {
+      db.transaction((transaction) => {
         transaction.executeSql(
-            query,
-            [],
-            (_, { rows }) => {
+          query,
+          [tournament?.name ?? "", tournament?.start_date ?? "", tournament?.end_date ?? ""],
+          () => {
+            console.log("Tournament added");
+            resolve();
+          }
+        );
+      });
+    });
+  }
+  
+  
+  
+
+  export async function getLeagues(db) {
+    const query = "SELECT * FROM lu_league;";
+  
+    return new Promise<void>((resolve, reject) => {
+      db.transaction((transaction) => {
+        transaction.executeSql(
+          query,
+          [],
+          (_, { rows }) => {
             console.log("Query completed");
             console.log(rows);
-            },
-            (_, error) => {
+            resolve();
+          },
+          (_, error) => {
             console.error("Query error:", error);
-            }
+            reject(error);
+          }
         );
-        }
-    );
-    }
-    
+      });
+    });
+  }
+  
+
   
