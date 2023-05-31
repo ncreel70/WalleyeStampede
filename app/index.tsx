@@ -3,39 +3,44 @@ import { SafeAreaView, StyleSheet } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import HomeNavButton from "../components/home/HomeNavButton";
 import * as SQLite from 'expo-sqlite';
-import checkIfExists from './utils/api'
+import {checkIfExists, seedData, getTournaments, getLeagues} from './utils/api'
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
-import pathToDatabaseFile from '../assets/stampede.db';
+import { useRouter } from "expo-router";
 
 const Home = () => {
   useEffect(() => {
     async function openDatabase(pathToDatabaseFile: string): Promise<SQLite.WebSQLDatabase> {
-      if (!(await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'SQLite')).exists) {
-        await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'SQLite');
+      const dbPath = `${FileSystem.documentDirectory}SQLite/stampede.db`;
+
+      if (!(await FileSystem.getInfoAsync(dbPath)).exists) {
+        if (!(await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite`)).exists) {
+          await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}SQLite`);
+        }
+        await FileSystem.copyAsync({
+          from: pathToDatabaseFile,
+          to: dbPath,
+        });
       }
-      await FileSystem.downloadAsync(
-        Asset.fromModule(pathToDatabaseFile).uri,
-        FileSystem.documentDirectory + 'SQLite/stampede.db'
-      );
+
       return SQLite.openDatabase('stampede.db');
     }
 
-    openDatabase(pathToDatabaseFile)
+    openDatabase(require('./assets/SQLite/stampede.db'))
       .then((db) => {
-        // Use the opened database here
+        
+        checkIfExists(db);
+        seedData(db);
+        getTournaments(db);
+        getLeagues(db);
         console.log("Database opened:", db);
       })
-      .catch((error) => {
-        console.error("Failed to open the database:", error);
-      });
-  }, []);
+      
+ 
+}, []);
 
-  const router = {
-    push: (route: string) => {
-      console.log("Pushing to route:", route);
-    },
-  };
+  const router = useRouter();
+    
   return (
     <SafeAreaView style={styles.container}>
       <HomeNavButton
@@ -50,7 +55,7 @@ const Home = () => {
       <HomeNavButton title="Add Team" route={() => router.push("addTeam")} />
     </SafeAreaView>
   );
-};
+  }
 
 const styles = StyleSheet.create({
   container: {
