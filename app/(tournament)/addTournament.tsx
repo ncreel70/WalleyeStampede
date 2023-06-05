@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, Text } from "react-native";
-import { openDatabase, addNewTournament } from "../utils/api";
-import { TournamentData } from "../utils/types";
+import { openDatabase, addNewTournament } from "../../utils/api";
+import { TournamentData } from "../../utils/types";
 import * as SQLite from 'expo-sqlite';
 
 const AddTournament: React.FC = () => {

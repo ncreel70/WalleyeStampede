@@ -2,15 +2,12 @@ import React, { useEffect } from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import HomeNavButton from "../components/home/HomeNavButton";
-import * as SQLite from 'expo-sqlite';
-import {checkIfExists, seedData, getTournaments, getLeagues, openDatabase} from './utils/api'
-import * as FileSystem from 'expo-file-system';
-import { Asset } from 'expo-asset';
+
 import { useRouter } from "expo-router";
 
 const Home = () => {
-  const [db, setDb] = React.useState<SQLite.WebSQLDatabase | null>(null);
- 
+  
+  
 
   const router = useRouter();
     

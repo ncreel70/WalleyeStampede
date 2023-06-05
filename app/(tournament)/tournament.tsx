@@ -1,27 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
-import { getTournaments, openDatabase } from "../utils/api";
-import { TournamentData } from "../types";
+import { getTournaments, seedTournaments } from "../../data/helpers";
+import  TournamentModel  from "../../data/model/Tournament";
+import { Model } from "@nozbe/watermelondb";
 
 const Tournament: React.FC = () => {
-  const [tournaments, setTournaments] = useState<TournamentData[]>([]);
+  const [tournaments, setTournaments] = useState([]);
 
   useEffect(() => {
-    openDatabase(require('../assets/SQLite/stampede.db'))
-      .then((db) => {
-        getTournaments(db)
-          .then((result: TournamentData[]) => {
-            setTournaments(result);
-          })
-          .catch((error) => {
-            console.error("Failed to fetch tournaments:", error);
-          });
-        console.log("Database opened:", db);
-      })
-      .catch((error) => {
-        console.error("Failed to open the database:", error);
-      });
-  }, []);
+    seedTournaments();
+    getTournaments().then((tournaments) => {
+      setTournaments(tournaments);
+    } );
+  });
+  
+  
 
   return (
     <View>
