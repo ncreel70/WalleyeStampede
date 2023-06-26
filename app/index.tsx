@@ -4,6 +4,9 @@ import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import HomeNavButton from "../components/home/HomeNavButton";
 
+
+
+
 const Home = () => {
   const router = useRouter();
   return (
